@@ -1,0 +1,32 @@
+
+non-fluents amdp643 {
+    domain = enum_amdp;
+
+    objects {
+        drone               : { d0 };
+    };
+
+    non-fluents {
+        // PASSENGERS
+        DRONE_GOALX(d0) = @6;
+        DRONE_GOALY(d0) = @4;
+        DRONE_GOALZ(d0) = @3;
+
+    };
+}
+
+instance enum-amdp_inst_mdp__643  {
+    domain = enum_amdp;
+    non-fluents = amdp643;
+
+
+    init-state {
+        drone-x(d0) = @1;
+        drone-y(d0) = @1;
+        drone-z(d0) = @1;
+    };
+
+    horizon = 20;
+
+    discount = 1.0;
+}

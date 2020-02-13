@@ -1,0 +1,127 @@
+/////////////////////////////////////////////////////////////////////////////////
+// RDDL MDP Version of the LTL AMDP domain from the AMDP paper by              //
+// Oh et. al. 2019                                                             //
+//                                                                             //
+/////////////////////////////////////////////////////////////////////////////////
+
+
+domain enum_amdp {
+    requirements {
+        reward-deterministic,
+        cpf-deterministic,
+        preconditions
+    };
+
+    // 6 * 4 * 3
+
+    types {
+        drone          : object;
+        number         : { @1, @2, @3, @4, @5, @6 };
+    };
+
+    pvariables {
+    //////////////////////////////// States /////////////////////////////////
+    // Position variables
+        drone-x(drone)                 : { state-fluent, number, default = @1 };
+        drone-y(drone)                 : { state-fluent, number, default = @1 };
+        drone-z(drone)                 : { state-fluent, number, default = @1 };
+
+    //////////////////////////////// Actions ////////////////////////////////
+        move_north                           : { action-fluent, bool, default = false };
+        move_south                           : { action-fluent, bool, default = false };
+        move_east                            : { action-fluent, bool, default = false };
+        move_west                            : { action-fluent, bool, default = false };
+        move_up                              : { action-fluent, bool, default = false };
+        move_down                            : { action-fluent, bool, default = false };
+
+    //////////////////////////////// Non-Fluents ////////////////////////////////
+
+    // The goal location for the drone
+        DRONE_GOALX(drone)           : {non-fluent, bool, default = false };
+        DRONE_GOALY(drone)           : {non-fluent, bool, default = false };
+        DRONE_GOALZ(drone)           : {non-fluent, bool, default = false };
+
+    };
+
+    cdfs {
+
+    //  Movement transition functions
+        drone-x'(?d) =
+            if ((move_west) & (drone-x(?d) == @2))
+            	then @1
+            else if ((move_west) & (drone-x(?d) == @3))
+            	then @2
+            else if ((move_west) & (drone-x(?d) == @4))
+            	then @3
+            else if ((move_west) & (drone-x(?d) == @5))
+            	then @4
+            else if ((move_west) & (drone-x(?d) == @6))
+            	then @5
+            else if ((move_east) & (drone-x(?d) == @1))
+            	then @2
+            else if ((move_east) & (drone-x(?d) == @2))
+            	then @3
+            else if ((move_east) & (drone-x(?d) == @3))
+            	then @4
+            else if ((move_east) & (drone-x(?d) == @4))
+            	then @5
+            else if ((move_east) & (drone-x(?d) == @5))
+            	then @6
+            else drone-x(?d);
+
+      drone-y'(?d) =
+          if ((move_south) & (drone-y(?d) == @2))
+          	then @1
+          else if ((move_south) & (drone-y(?d) == @3))
+          	then @2
+          else if ((move_south) & (drone-y(?d) == @4))
+          	then @3
+          else if ((move_north) & (drone-y(?d) == @1))
+          	then @2
+          else if ((move_north) & (drone-y(?d) == @2))
+          	then @3
+          else if ((move_north) & (drone-y(?d) == @3))
+          	then @4
+          else drone-y(?d);
+
+      drone-z'(?d) =
+          if ((move_down) & (drone-z(?d) == @2))
+          	then @1
+          else if ((move_down) & (drone-z(?d) == @3))
+          	then @2
+          else if ((move_down) & (drone-z(?d) == @4))
+          	then @3
+          else if ((move_up) & (drone-z(?d) == @1))
+          	then @2
+          else if ((move_up) & (drone-z(?d) == @2))
+          	then @3
+          else if ((move_up) & (drone-z(?d) == @3))
+          	then @4
+          else drone-z(?d);
+
+
+    };
+
+    reward =
+          if ( forall_{ ?d : drone } [ DRONE_GOALX(?d) == drone-x(?d) & DRONE_GOALY(?d) == drone-y(?d) & DRONE_GOALZ(?d) == drone-z(?d) ] )
+              then 5
+          else -1;
+
+    action-preconditions {
+    // there can only be one move per turn
+          ( forall_{ ?d : drone } [move_west + move_east + move_south + move_north + move_up + move_down ] <= 1 ) ;
+
+    // don't move outside of the grid
+        forall_{ ?d : drone } [ move_west => drone-x(?d) ~= @1 ];
+        forall_{ ?d : drone } [ move_east => drone-x(?d) ~= @6 ];
+        forall_{ ?d : drone } [ move_north => drone-y(?d) ~= @4 ];
+        forall_{ ?d : drone } [ move_south => drone-y(?d) ~= @1 ];
+        forall_{ ?d : drone } [ move_up => drone-z(?d) ~= @3 ];
+        forall_{ ?d : drone } [ move_down => drone-z(?d) ~= @1 ];
+
+    };
+
+    state-action-constraints {
+
+    };
+}
